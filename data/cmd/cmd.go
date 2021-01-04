@@ -49,6 +49,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP("outdir", "o", "", "输出目录")
 	rootCmd.MarkFlagRequired("outdir")
 
+	// 新加的
+	rootCmd.PersistentFlags().StringP("table", "t", "", "表名")
+	rootCmd.MarkFlagRequired("table")
+
 	rootCmd.PersistentFlags().BoolP("singular", "s", true, "是否禁用表名复数")
 	rootCmd.MarkFlagRequired("singular")
 
@@ -90,6 +94,7 @@ func MergeMysqlDbInfo() {
 	mycobra.IfReplace(rootCmd, "password", &tmp.Password) // 如果设置了，更新
 	mycobra.IfReplace(rootCmd, "port", &tmp.Port)         // 如果设置了，更新
 	mycobra.IfReplace(rootCmd, "user", &tmp.Username)     // 如果设置了，更新
+	mycobra.IfReplace(rootCmd, "table", &tmp.Table)
 	config.SetMysqlDbInfo(&tmp)
 
 	url := config.GetURLTag()

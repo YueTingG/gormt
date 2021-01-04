@@ -32,6 +32,7 @@ type DBInfo struct {
 	Username string // Username 用户名
 	Password string // Password 密码
 	Database string // Database 数据库名
+	Table    string // 数据库表
 	Type     int    // 数据库类型: 0:mysql , 1:sqlite , 2:mssql
 }
 

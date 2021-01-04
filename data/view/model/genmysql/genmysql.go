@@ -1,6 +1,7 @@
 package genmysql
 
 import (
+	"database/sql"
 	"fmt"
 	"sort"
 	"strings"
@@ -158,8 +159,8 @@ func (m *mysqlModel) getTableElement(orm *mysqldb.MySqlDB, tab string) (el []mod
 				if v.NonUnique == 0 { // primary or unique
 					if strings.EqualFold(v.KeyName, "PRIMARY") { // PRI Set primary key.设置主键
 						tmp.Index = append(tmp.Index, model.KList{
-							Key:   model.ColumnsKeyPrimary,
-							Multi: (keyNameCount[v.KeyName] > 1),
+							Key:     model.ColumnsKeyPrimary,
+							Multi:   (keyNameCount[v.KeyName] > 1),
 							KeyType: v.IndexType,
 						})
 					} else { // unique
@@ -206,11 +207,17 @@ func (m *mysqlModel) getTables(orm *mysqldb.MySqlDB) map[string]string {
 
 	// Get column names.获取列名
 	var tables []string
+	var rows *sql.Rows
+	var err error
 
-	rows, err := orm.Raw("show tables").Rows()
+	if config.GetDbInfo().Table != "" {
+		tables = append(tables, config.GetDbInfo().Table)
+		tbDesc[config.GetDbInfo().Table] = ""
+		goto next
+	}
+	rows, err = orm.Raw("show tables").Rows()
 	if err != nil {
 		if !config.GetIsGUI() {
-			fmt.Println(err)
 		}
 		return tbDesc
 	}
@@ -223,6 +230,7 @@ func (m *mysqlModel) getTables(orm *mysqldb.MySqlDB) map[string]string {
 	}
 	rows.Close()
 
+next:
 	// Get table annotations.获取表注释
 	rows1, err := orm.Raw("SELECT TABLE_NAME,TABLE_COMMENT FROM information_schema.TABLES WHERE table_schema= '" + m.GetDbName() + "'").Rows()
 	if err != nil {
@@ -235,7 +243,10 @@ func (m *mysqlModel) getTables(orm *mysqldb.MySqlDB) map[string]string {
 	for rows1.Next() {
 		var table, desc string
 		rows1.Scan(&table, &desc)
-		tbDesc[table] = desc
+		_, ok := tbDesc[table]
+		if ok {
+			tbDesc[table] = desc
+		}
 	}
 	rows1.Close()
 
