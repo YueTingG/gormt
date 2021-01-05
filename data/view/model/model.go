@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"strings"
 	"text/template"
 
@@ -76,6 +77,16 @@ func (m *_Model) genTableElement(cols []ColumnsInfo) (el []genstruct.GenElement)
 	for _, v := range cols {
 		var tmp genstruct.GenElement
 		var isPK bool
+
+		// json tag
+		if config.GetIsWEBTag() {
+			if isPK && config.GetIsWebTagPkHidden() && config.GetMode() != 0 {
+				tmp.AddTag(_tagJSON, "-")
+			} else {
+				tmp.AddTag(_tagJSON, mybigcamel.UnMarshal(v.Name))
+			}
+		}
+
 		if strings.EqualFold(v.Type, "gorm.Model") { // gorm model
 			tmp.SetType(v.Type) //
 		} else {
@@ -86,14 +97,16 @@ func (m *_Model) genTableElement(cols []ColumnsInfo) (el []genstruct.GenElement)
 				switch v1.Key {
 				// case ColumnsKeyDefault:
 				case ColumnsKeyPrimary: // primary key.主键
-					tmp.AddTag(_tagGorm, "primaryKey")
+					if config.GetMode() != 0 {
+						tmp.AddTag(_tagGorm, "primaryKey")
+					}
 					isPK = true
 				case ColumnsKeyUnique: // unique key.唯一索引
 					tmp.AddTag(_tagGorm, "unique")
 				case ColumnsKeyIndex: // index key.复合索引
-					if v1.KeyType=="FULLTEXT" {
+					if v1.KeyType == "FULLTEXT" {
 						tmp.AddTag(_tagGorm, getUninStr("index", ":", v1.KeyName)+",class:FULLTEXT")
-					}else{
+					} else {
 						tmp.AddTag(_tagGorm, getUninStr("index", ":", v1.KeyName))
 					}
 				case ColumnsKeyUniqueIndex: // unique index key.唯一复合索引
@@ -105,28 +118,24 @@ func (m *_Model) genTableElement(cols []ColumnsInfo) (el []genstruct.GenElement)
 		if len(v.Name) > 0 {
 			// not simple output
 			if !config.GetSimple() {
-				tmp.AddTag(_tagGorm, "column:"+v.Name)
-				tmp.AddTag(_tagGorm, "type:"+v.Type)
-				if !v.IsNull {
+				if config.GetMode() == 0 {
+					tmp.AddTag(_tagGorm, v.Name)
+				} else {
+					tmp.AddTag(_tagGorm, "column:"+v.Name)
+					tmp.AddTag(_tagGorm, "type:"+v.Type)
+				}
+				if !v.IsNull && config.GetMode() != 0 {
 					tmp.AddTag(_tagGorm, "not null")
 				}
 			}
 			// default tag
-			if len(v.Gormt) > 0 {
+			if len(v.Gormt) > 0 && config.GetMode() != 0 {
 				tmp.AddTag(_tagGorm, v.Gormt)
-			}
-
-			// json tag
-			if config.GetIsWEBTag() {
-				if isPK && config.GetIsWebTagPkHidden() {
-					tmp.AddTag(_tagJSON, "-")
-				} else {
-					tmp.AddTag(_tagJSON, mybigcamel.UnMarshal(v.Name))
-				}
 			}
 
 		}
 
+		log.Println("guo: ", tmp)
 		tmp.ColumnName = v.Name // 列名
 		el = append(el, tmp)
 

@@ -44,7 +44,7 @@ func (e *GenElement) Generate() string {
 		for k := range e.Tags {
 			ks = append(ks, k)
 		}
-		sort.Strings(ks)
+		//sort.Strings(ks)
 
 		var tags []string
 		for _, v := range ks {

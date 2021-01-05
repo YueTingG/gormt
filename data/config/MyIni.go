@@ -23,6 +23,7 @@ type Config struct {
 	IsGUI            bool   `yaml:"is_gui"` //
 	IsTableName      bool   `yaml:"is_table_name"`
 	IsNullToPoint    bool   `yaml:"is_null_to_point"` // null to porint
+	Mode             int    // 0：ID int64  `json:"id" gorm:"id"`，2：原来那种
 }
 
 // DBInfo mysql database information. mysql 数据库信息
@@ -205,4 +206,8 @@ func SetIsNullToPoint(b bool) {
 // GetIsNullToPoint get if with null to porint in sturct
 func GetIsNullToPoint() bool {
 	return _map.IsNullToPoint
+}
+
+func GetMode() int {
+	return _map.Mode
 }
